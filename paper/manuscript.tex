@@ -1,0 +1,112 @@
+\documentclass[11pt,a4paper]{amsart}
+\usepackage[T1]{fontenc}
+\usepackage[margin=1in]{geometry}
+\usepackage{amssymb}
+\usepackage[hidelinks]{hyperref}
+\hypersetup{pdftitle={Recognizing M-identifiability of factor graphs}}
+\DeclareMathSizes{8}{8}{8}{8}
+\DeclareMathSizes{9}{9}{8}{8}
+\DeclareMathSizes{10.95}{10.95}{8}{8}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\title{Recognizing M-identifiability of factor graphs}
+\date{November 27, 2026}
+
+\begin{document}
+\begin{abstract}
+We prove that recognizing ordinary M-identifiability of a factor analysis graph is NP-complete when the matching witnesses have unrestricted size. A minimum cut gives a witness whose matching uses every common latent parent of its two sides. A reduction from 3-SAT uses this property to force a chain of matchings and encode satisfiability in the first certification. This answers the ordinary half of Conjecture 5.3 of Sturma, Kranzlmueller, Portakal and Drton. The same witness characterization gives a fixed-parameter algorithm in the number of latent factors.
+\end{abstract}
+\maketitle
+
+\section{The ordinary matching criterion}
+
+Let \(G\) have observed vertices \(V\), latent vertices \(H\), and directed edges from latents to their observed children. We use Definitions~4.1 and~4.7 of \cite{source}. A matching of equally sized observed sets \(U,W\) consists of paths \(u\leftarrow g\rightarrow w\) through distinct latent centers \(g\), covering each member of each side once. The matching is called intersection-free in \cite{source}. Remove previously certified factors and keep all observed vertices. An observed pivot \(v\) with sole remaining parent \(h\) certifies \(h\) if there are nonempty disjoint equally sized sets \(U,W\) avoiding \(v\) that match, while \(U\cup\{v\},W\cup\{v\}\) do not. Ordinary M-identifiability asks whether this process can certify all latent factors. Childless factors are marked solved initially, as in Algorithm~2 of \cite{preprint}.
+
+The criterion allows using a subset of the previously certified factors when testing a new witness. Lemma~B.1 of \cite{preprint} proves that using all of them is sufficient. Lemma~B.2 checks supplied sides by flow. The unrestricted recognition problem must find the sides as well as the order of the certifications. Theorem~5.1 of \cite{source} handles bounded side size. Their Conjecture~5.3 asks about unrestricted ordinary and extended recognition.
+
+\begin{theorem}\label{thm:main}
+Recognizing ordinary M-identifiability of an explicitly given factor analysis graph is NP-complete under polynomial-time many-one reductions.
+\end{theorem}
+
+\section{A minimum-cut witness}
+
+When the pivot \(v\) has sole parent \(h\), both copies of \(v\) in an augmented matching must be matched through \(h\). The centers are distinct, so these copies must use the same path \(v\leftarrow h\rightarrow v\). An augmented matching therefore exists exactly when \(U,W\) have a matching after deleting \(h\).
+
+Write \(N(P)\) for the set of latent parents of the observations in \(P\) in the current graph. Call a matching \emph{exact} if its centers are exactly \(N(U)\cap N(W)\), for \(U,W\) its observed endpoint sets.
+
+\begin{lemma}\label{lem:cut}
+The pivot \(v\) certifies its sole parent \(h\) if and only if some exact matching uses \(h\) and avoids \(v\).
+\end{lemma}
+
+\begin{proof}
+In an exact matching with \(k\) paths there are exactly \(k\) common centers. Deleting one of them makes a size-\(k\) matching impossible.
+
+Conversely take a witness with sides \(U,W\) of size \(k\), and fix a matching of them. Delete \(h\). Use a flow network with arcs from the source to \(U\), from \(U\) to latent inputs, from latent outputs to \(W\), and from \(W\) to the sink. Each latent is split into an input and an output joined by a unit-capacity arc. The source and sink arcs have unit capacity and each incidence arc has capacity \(k+1\). This is the split-center version of the matching network of \cite[Lemma~B.2]{preprint}. Integral flows correspond to matchings, so the deletion of \(h\) leaves a cut of capacity less than \(k\).
+
+Let \(U'\) be the left vertices on the source side of the cut, and \(W'\) the right vertices on the sink side. No incidence arc is cut. Each common parent of \(U',W'\) other than \(h\) contributes its unit split arc to the cut. The source and sink arcs contribute another \(2k-|U'|-|W'|\). Consequently, putting \(d=|U'|+|W'|-k\),
+\[
+ \bigl|\bigl(N(U')\cap N(W')\bigr)\setminus\{h\}\bigr|<d.
+\]
+At least \(d\) paths of the fixed matching have both endpoints in \(U',W'\), because at most \(2k-|U'|-|W'|\) paths have a missing endpoint. Their centers are distinct and common. Adding back \(h\) leaves at most \(d\) common centers. Thus there are exactly \(d\) such paths, their centers are all the common parents, and one center is \(h\). Restrict to their endpoints. No new common parent appears and each retained center remains common, giving the exact matching.
+\end{proof}
+
+An exact matching stays exact after deleting some centers and their paths, and keeping only the endpoints of the remaining paths. This gives a direct proof of persistence for the witnesses used here. The persistence result itself is established in \cite[Lemma~B.1]{preprint}.
+
+\section{Encoding satisfiability}
+
+Start with a nonempty 3-CNF formula with at most three literals per clause and both polarities of every variable occurring. Adding \(x\lor\neg x\) for each variable ensures the latter assumption. Use two observed anchors \(a,b\). First create the following \emph{formula factors}, listed by their children.
+\begin{itemize}
+\item A variable factor has children \(a,b,X_i,N_i\), where \(X_i,N_i\) represent the two literals of variable \(i\).
+\item A clause factor has children \(a,b,c_j\) and one distinct spare \(s_{j,\ell}\) for each literal occurrence \(\ell\) of the clause. The reference spare \(c_j\) is private to clause \(j\).
+\item An equality factor for \(c_j\) has children \(a,c_j\). An equality factor for \(s_{j,\ell}\) has children \(s_{j,\ell}\) and the literal vertex of that occurrence.
+\end{itemize}
+All named vertices are distinct except for the specified shared observations.
+
+List these factors as \(g_1,\ldots,g_m\) and write \(K=3m\). Introduce pairs \(a_i,b_i\) for \(0\le i\le K\), using \(a_K=a,b_K=b\). The starting factor \(h\) has children \(v,a_0,b_0\), with fresh pivot \(v\). For \(1\le i\le K\), use a relay \(r_i\) and a lock \(t_i\), with children
+\[
+ r_i:\{a_{i-1},b_{i-1},a_i,b_i\},\qquad
+ t_i:\{a_{i-1},a_i,b_i,z_i,y_i\},
+\]
+where \(z_i,y_i\) are private to stage \(i\). For \(i=3j-2,3j-1,3j\), add \(z_i\) as a child of \(g_j\) and put the three \(y_i\)'s under a filler factor \(F_j\). Each \(z_i\) has just parents \(t_i,g_j\), and each \(y_i\) has just parents \(t_i,F_j\). The graph has size linear in the formula. Every observation other than \(v\) has at least two parents. In particular, the literal vertices have their variable and occurrence factors, the spares have their equality and clause factors, and the pairs and private observations have their stage factors. The sole possible first certification is at \(v\) for \(h\).
+
+\subsection{A first certification gives a satisfying assignment}
+
+Take an exact matching that certifies \(h\), and color each endpoint by its side. The path of \(h\) occupies \(a_0,b_0\) in opposite colors. Whenever \(a_{i-1},b_{i-1}\) are already occupied in opposite colors, \(r_i\) is common and must be used. Its only available endpoints are \(a_i,b_i\). This forces all relay pairs, including \(a,b\). Now each \(t_i\) is common through \(a_i,b_i\), so its endpoints must be its private pair \(z_i,y_i\). Thus all added children of the formula factors are already occupied.
+
+Each variable factor is common through \(a,b\), so it must occupy \(X_i,N_i\) in opposite colors. Read the color of \(b\) as true. If a chosen spare differs in color from its reference, its equality factor is common. Its added children and reference are already occupied, leaving only the spare itself for that factor, a contradiction. Therefore a selected reference spare has the color of \(a\), and a selected occurrence spare has the color of its literal. Each clause factor is common through \(a,b\) and uses two spares of opposite colors. At least one of them is a true occurrence. All clauses are satisfied.
+
+\subsection{A satisfying assignment gives a full sequence}
+
+Color \(a_i\) left and \(b_i\) right, and match each pair through \(h\) for \(i=0\) or \(r_i\) otherwise. Match the literal vertices through their variable factors with the true literal on the right. In each clause choose a true occurrence and match its spare on the right to the reference spare on the left. The equality factors are thus one-sided on their selected original children. For the three stages attached to each \(g_j\), put all three \(z_i\)'s in one color. Use the color of the selected original children if these children are nonempty and monochromatic. Otherwise use either color. Put the three \(y_i\)'s in the opposite color, and match \(z_i,y_i\) through \(t_i\). Each filler is one-sided and no unused formula factor becomes common. All and only the common centers are used, giving an exact matching at \(v\).
+
+After \(h\) and the preceding stages have been certified, \(b_{i-1}\) has only parent \(r_i\). Restrict the exact matching to its unresolved centers. The pivot's former path has already been deleted, and the matching still uses \(r_i\), so certify \(r_i\). Next, \(a_{i-1}\) has only parent \(t_i\). Restrict again and certify \(t_i\). After the last stage, each \(g_j\) has three \(z\)-children with no other parent. Use one as pivot and the other two as singleton sides. Each \(F_j\) is certified the same way using its three \(y\)-children. This is a full sequence.
+
+\begin{proof}[Completion of Theorem~\ref{thm:main}]
+An unsatisfiable instance lacks a first certification. A satisfying assignment gives a full sequence, as shown above. For membership in NP, list all nonempty factors in order with one pivot and two observed sides for each. Check the sole-parent condition and the two matching sizes by integral flow, as in \cite[Lemma~B.2]{preprint}. There are polynomially many checks of polynomial size.
+\end{proof}
+
+\section{An example and a latent-count algorithm}
+
+For a small example, use \(h\) with children \(v,a,b\) and \(r\) with children \(a,b,c,d\). The sides \(\{a,c\},\{b,d\}\) match through \(h,r\), and the augmented sides would need three centers. Thus \(v\) certifies \(h\). Then \(a\) certifies \(r\) with sides \(\{c\},\{d\}\). If a third factor \(s\) has children \(c,d\), the original sides still match when \(h\) is deleted, through \(r,s\). Moreover \(v\) is then the only sole-parent pivot. An exact matching for \(h\) would occupy \(a,b\) through \(h\), force the common center \(r\) to use \(c,d\), and make \(s\) common with no endpoints left. The enlarged graph cannot start.
+
+\begin{theorem}
+With \(m\) latent factors, ordinary M-identifiability is decidable in \(O^*(3^m)\) time, where \(O^*\) suppresses factors polynomial in the input size.
+\end{theorem}
+
+For each eligible pivot \(v\) with parent \(h\), label every residual factor common, left-only, or right-only, forcing \(h\) common. For each common factor create one left and one right slot. Join a slot to its observed children other than \(v\) whose parents include no factor labeled exclusively for the opposite side. Test whether a bipartite matching can assign a different observation to every slot. A successful matching gives distinct sides, uses exactly the common factors, and certifies \(h\) by Lemma~\ref{lem:cut}. Conversely, the common and one-sided parents of an exact witness define a successful labeling. Parents incident to neither side can take either one-sided label. There are at most \(3^{m-1}\) labelings per pivot. Apply the greedy peeling of \cite[Algorithm~2]{preprint}, which is complete by witness persistence. The polynomial number of rounds and pivot scans gives the bound.
+
+The extended criterion includes a second, local BB move. The sole-pivot obstruction used here addresses only the ordinary criterion. Generic sign-identifiability is a property of the statistical model, while the theorem decides this particular sufficient graph criterion.
+
+\section*{Research disclosure}
+
+\begingroup\hyphenpenalty=10000\exhyphenpenalty=10000\emergencystretch=1em\relax
+Under human direction, ChatGPT Astra 6.2 (OpenAI) generated the discovery proof and original replay packet. OpenAI Codex reviewed the mathematics and revised the manuscript. GPT-6.2 Sol checked the original criterion and literature, prepared the finite replay and worked visual example, and assembled the release. DannyExperiments maintains the repository and is the preferred citation identity. No AI system is proposed as an author.
+\par\endgroup
+
+\begin{thebibliography}{9}
+\bibitem{source}
+N. Sturma, M. Kranzlmueller, I. Portakal, and M. Drton, \emph{Matching criterion for identifiability in sparse factor analysis}, Psychometrika \textbf{91} (2026), no.~2, 536--555. \href{https://doi.org/10.1017/psy.2026.10079}{DOI: 10.1017/psy.2026.10079}.
+\bibitem{preprint}
+N. Sturma, M. Kranzlmueller, I. Portakal, and M. Drton, \emph{Matching criterion for identifiability in sparse factor analysis}, \href{https://arxiv.org/html/2502.02986v2#A2}{arXiv:2502.02986v2}, Appendix~B, 2026.
+\end{thebibliography}
+\end{document}

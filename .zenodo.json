@@ -1,0 +1,29 @@
+{
+  "title": "Recognizing M-identifiability of factor graphs",
+  "upload_type": "software",
+  "version": "1.0.0",
+  "publication_date": "2026-11-27",
+  "creators": [
+    {
+      "name": "DannyExperiments"
+    }
+  ],
+  "description": "Recognizing ordinary M-identifiability of a factor analysis graph is NP-complete when matching witnesses have unrestricted size. This answers the ordinary half of Conjecture 5.3 of Sturma, Kranzlmueller, Portakal and Drton.\n\nA minimum cut shrinks a certificate to a matching that uses every common latent parent of its two observed sides. A reduction from 3-SAT uses this equality to force a sequence of relay and lock matchings. The only possible first certification encodes satisfiability. A satisfying assignment also supplies the entire certification sequence. The note credits the published matching criterion, witness verification by flow, and greedy peeling. The bounded source search found no earlier unrestricted ordinary classification. A separate latent-label search gives O*(3^m) time for m latent factors.\n\nExact replay checks three full certification sequences, 4,096 small matching networks, 256 whole-graph comparisons, and the worked two- and three-factor examples. The work is internally reviewed. External peer review and formal verification remain pending. Extended M-identifiability and generic identifiability recognition are outside the result.\n\nUnder human direction, ChatGPT Astra 6.2 (OpenAI) generated the discovery proof and original replay packet. OpenAI Codex reviewed the mathematics and revised the manuscript. GPT-6.2 Sol checked the original criterion and literature, prepared the finite replay and worked visual example, and assembled the release. DannyExperiments maintains the repository and is the preferred citation identity. No AI system is proposed as an author.",
+  "keywords": [
+    "factor analysis",
+    "M-identifiability",
+    "graph algorithms",
+    "matchings",
+    "NP-completeness"
+  ],
+  "access_right": "open",
+  "license": "other-closed",
+  "notes": "All rights reserved. Publicly downloadable files are supplied without a repository-wide reuse license.",
+  "related_identifiers": [
+    {
+      "identifier": "https://github.com/DannyExperiments/recognizing-m-identifiability/releases/tag/v1.0.0",
+      "relation": "isSupplementTo",
+      "resource_type": "software"
+    }
+  ]
+}

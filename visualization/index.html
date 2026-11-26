@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>When the pivot certifies a factor</title>
+<style>
+:root{color-scheme:dark;--bg:#101b2e;--panel:#192a43;--ink:#f0f6ff;--muted:#bacee7;--mint:#80e8cf;--amber:#ffc385}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:1rem/1.52 system-ui,sans-serif}
+main{max-width:60rem;margin:auto;padding:clamp(1rem,4vw,2.5rem)}
+h1{font-size:clamp(2rem,7vw,3.45rem);line-height:1.08;margin:0 0 .6rem}
+h2{font-size:1.16rem;margin:0 0 .55rem}
+p{margin:.38rem 0 .85rem}
+.lead,.muted{color:var(--muted)}
+.grid{display:grid;grid-template-columns:1.45fr 1fr;gap:1rem;align-items:start}
+.panel{background:var(--panel);border:1px solid #415a79;border-radius:1rem;padding:1rem}
+canvas{display:block;width:100%;aspect-ratio:12/8;touch-action:pan-y;cursor:grab}
+.key{display:flex;flex-wrap:wrap;gap:.25rem 1rem;margin:.4rem 0 .8rem}
+.mint{color:var(--mint)}.amber{color:var(--amber)}
+label.control{display:flex;align-items:center;gap:.6rem;min-height:2.75rem;font-weight:670}
+input{accent-color:var(--mint)}
+input[type=range]{width:100%;min-height:2.75rem}
+input[type=checkbox]{width:1.2rem;height:1.2rem;margin:0}
+#result{font-weight:740;padding:.65rem;border:1px solid currentColor;border-radius:.5rem}
+.metric{border-top:1px solid #516786;padding:.65rem 0;font-size:1.08rem}
+.metric strong{display:block;font-size:1.42rem}
+output{display:block}
+summary{cursor:pointer;font-weight:700;min-height:2.75rem}
+details{margin-top:1rem}
+:focus-visible{outline:2px solid var(--amber);outline-offset:3px}
+@media(max-width:43rem){.grid{grid-template-columns:1fr}.panel{padding:.85rem}}
+</style>
+</head>
+<body>
+<main>
+<h1>When the pivot certifies a factor</h1>
+<p class="lead">The base sides match through h and r. The pivot v certifies h when adding a copy of v to each side makes a full matching impossible.</p>
+<div class="grid">
+  <section class="panel">
+    <h2>The factor graph</h2>
+    <canvas id="scene" width="720" height="480" aria-label="Rotatable factor graph. Left observations a and c connect through latent centers to right observations b and d. The pivot v has sole parent h."></canvas>
+    <div class="key"><span class="mint">● Observed</span><span class="amber">● Latent</span><span>○ Pivot</span></div>
+    <label for="orbit">Rotate the graph</label>
+    <input id="orbit" type="range" min="-55" max="55" value="-15" aria-describedby="help">
+    <p class="muted" id="help">Drag the graph or move the slider.</p>
+  </section>
+  <section class="panel">
+    <h2>Try the certificate</h2>
+    <label class="control"><input id="decoy" type="checkbox"> Add latent s with children c and d</label>
+    <div aria-live="polite">
+      <div class="metric"><span id="base-label"></span><strong id="base"></strong><output class="muted" id="base-paths"></output></div>
+      <div class="metric"><span id="test-label"></span><strong id="augmented"></strong><output class="muted" id="test-paths"></output></div>
+      <p id="result"></p>
+      <p id="follow" class="muted"></p>
+    </div>
+  </section>
+</div>
+<details class="panel">
+  <summary>Why the extra factor matters</summary>
+  <p>Each path must use a distinct latent center. The two copies of v can only use h, so a full augmented matching must include v ← h → v. That leaves a, b, c, and d needing two other centers. With only r available they cannot match. With r and s they can.</p>
+  <p>In the enlarged graph v is the only observed vertex with a sole parent. Any exact witness for h must match a and b through h. This also makes r common, which would need c and d. Those endpoints make s common as well, with no endpoints left for it. Thus the enlarged graph has no first certificate.</p>
+</details>
+</main>
+<script>
+"use strict";
+const orbit=document.getElementById("orbit");
+const decoy=document.getElementById("decoy");
+const canvas=document.getElementById("scene");
+const pen=canvas.getContext("2d");
+const locations={
+ v:[0,-.19,1.15],h:[0,-.58,.51],r:[0,.58,-.40],s:[.31,-.55,-.96],
+ a:[-1.45,.27,.41],b:[1.45,.27,.41],c:[-1.45,-.15,-.65],d:[1.45,-.15,-.65],
+};
+const latents=new Set(["h","r","s"]);
+const mint="#80e8cf", amber="#ffc385";
+
+function graph() {
+  return decoy.checked ? {h:"vab",r:"abcd",s:"cd"} : {h:"vab",r:"abcd"};
+}
+
+function match(children,left,right) {
+  let best=[];
+  function scan(i,usedRight,usedCenters,paths) {
+    if (i===left.length) {
+      if (paths.length>best.length) best=paths.slice();
+      return;
+    }
+    const u=left[i];
+    for (let j=0;j<right.length;j++) {
+      if (usedRight.has(j)) continue;
+      for (const [g, endpoints] of Object.entries(children)) {
+        if (usedCenters.has(g) || !endpoints.includes(u) || !endpoints.includes(right[j])) continue;
+        usedRight.add(j);
+        usedCenters.add(g);
+        paths.push([u,g,right[j]]);
+        scan(i+1,usedRight,usedCenters,paths);
+        paths.pop();
+        usedCenters.delete(g);
+        usedRight.delete(j);
+      }
+    }
+    scan(i+1,usedRight,usedCenters,paths);
+  }
+  scan(0,new Set(),new Set(),[]);
+  return best;
+}
+
+function project([x,y,z],angle) {
+  const side=x*Math.cos(angle)-y*Math.sin(angle);
+  const toward=x*Math.sin(angle)+y*Math.cos(angle);
+  const up=z*Math.cos(.30)-toward*Math.sin(.30);
+  const depth=toward*Math.cos(.30)+z*Math.sin(.30);
+  const zoom=7/(7-depth);
+  return {x:360+side*176*zoom,y:240-up*150*zoom,depth,zoom};
+}
+
+function draw() {
+  const children=graph();
+  const tests=match(children,["v","a","c"],["v","b","d"]);
+  const base=match(children,["a","c"],["b","d"]);
+  const highlights=tests.length===3 ? tests : base;
+  const angle=Number(orbit.value)*Math.PI/180;
+  const labels=Object.keys(locations).filter(k=>k!=="s"||decoy.checked);
+  const nodes=Object.fromEntries(labels.map(k=>[k,project(locations[k],angle)]));
+  pen.clearRect(0,0,canvas.width,canvas.height);
+  pen.lineCap="round";
+  const chosen=new Set(highlights.flatMap(([u,g,w])=>[g+u,g+w]));
+  for (const [g,observed] of Object.entries(children)) {
+    for (const v of observed) {
+      pen.strokeStyle=chosen.has(g+v) ? mint : "#7998be";
+      pen.lineWidth=chosen.has(g+v) ? 7 : 3;
+      pen.beginPath();pen.moveTo(nodes[g].x,nodes[g].y);pen.lineTo(nodes[v].x,nodes[v].y);pen.stroke();
+    }
+  }
+  labels.sort((a,b)=>nodes[a].depth-nodes[b].depth).forEach(name=>{
+    const {x,y,zoom}=nodes[name];
+    pen.fillStyle=name==="v" ? "#f0f6ff" : latents.has(name) ? amber : mint;
+    pen.beginPath();pen.arc(x,y,22*zoom,0,Math.PI*2);pen.fill();
+    pen.strokeStyle="#192a43";pen.lineWidth=3;pen.stroke();
+    pen.fillStyle="#101b2e";pen.textAlign="center";pen.textBaseline="middle";
+    pen.font="bold 32px system-ui";pen.fillText(name,x,y+1);
+  });
+}
+
+function update() {
+  const children=graph();
+  const base=match(children,["a","c"],["b","d"]);
+  const augmented=match(children,["v","a","c"],["v","b","d"]);
+  const success=augmented.length<3;
+  const paths=p=>p.map(([u,g,v])=>u+" ← "+g+" → "+v).join(" · ");
+  document.getElementById("base-label").textContent="Base sides {a, c} and {b, d}";
+  document.getElementById("base").textContent=base.length+" of 2 paths";
+  document.getElementById("base-paths").textContent=paths(base);
+  document.getElementById("test-label").textContent="With v on both sides";
+  document.getElementById("augmented").textContent=augmented.length+" of 3 paths";
+  document.getElementById("test-paths").textContent=success ? "Only two distinct centers are available." : paths(augmented);
+  const result=document.getElementById("result");
+  result.textContent=success ? "v certifies h." : "v cannot certify h.";
+  result.style.color=success ? mint : amber;
+  document.getElementById("follow").textContent=success
+    ? "After removing h, pivot a certifies r using c and d."
+    : "The extra factor also blocks the first move in the full graph.";
+  draw();
+}
+
+decoy.addEventListener("change",update);
+orbit.addEventListener("input",draw);
+let last=null;
+canvas.addEventListener("pointerdown",event=>{
+  if (event.button!==0) return;
+  last=event.clientX;
+  canvas.setPointerCapture(event.pointerId);
+});
+canvas.addEventListener("pointermove",event=>{
+  if (last===null) return;
+  orbit.value=Math.max(-55,Math.min(55,Number(orbit.value)+Math.round((event.clientX-last)*1.6)));
+  last=event.clientX;
+  draw();
+});
+for (const type of ["pointerup","pointercancel","lostpointercapture"]) canvas.addEventListener(type,()=>{last=null;});
+update();
+</script>
+</body>
+</html>

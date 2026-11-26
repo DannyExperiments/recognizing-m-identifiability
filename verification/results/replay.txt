@@ -1,0 +1,4 @@
+Positive full-order flow checks: [65, 177, 217]
+Exhaustive small matching-lemma networks: 4096
+Whole-graph brute force versus latent-label peeling: 256
+Worked graphs: 2/2 base matchings; augmented sizes 2/3 and 3/3.

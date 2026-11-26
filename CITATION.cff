@@ -1,0 +1,27 @@
+cff-version: 1.2.0
+message: "Cite this version of the research release."
+title: "Recognizing M-identifiability of factor graphs"
+authors:
+  - name: "DannyExperiments"
+type: software
+version: "1.0.0"
+date-released: 2026-11-27
+repository-code: "https://github.com/DannyExperiments/recognizing-m-identifiability"
+keywords:
+  - "factor analysis"
+  - "M-identifiability"
+  - "graph algorithms"
+  - "matchings"
+  - "NP-completeness"
+doi: "10.5281/zenodo.24570842"
+url: "https://doi.org/10.5281/zenodo.24570842"
+preferred-citation:
+  type: software
+  title: "Recognizing M-identifiability of factor graphs"
+  authors:
+    - name: "DannyExperiments"
+  version: "1.0.0"
+  date-released: 2026-11-27
+  doi: "10.5281/zenodo.24570842"
+  url: "https://doi.org/10.5281/zenodo.24570842"
+  repository-code: "https://github.com/DannyExperiments/recognizing-m-identifiability"
